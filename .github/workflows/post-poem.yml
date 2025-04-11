@@ -41,23 +41,46 @@ jobs:
             exit 1
           fi
 
+      - name: Debug – list directory contents
+        run: ls -lh
+
+      - name: Ensure jq is installed
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Convert poem to JSON for Teams
+        run: |
+          awk '
+            BEGIN {
+              print "["
+              count = 0
+            }
+            {
+              gsub(/"/, "\\\"")
+              lines[count++] = $0
+            }
+            END {
+              for (i = 0; i < count; i++) {
+                if (lines[i] == "") {
+                  print "  {\"type\": \"TextBlock\", \"text\": \"\", \"wrap\": true}" (i < count - 1 ? "," : "")
+                } else {
+                  print "  {\"type\": \"TextBlock\", \"text\": \"" lines[i] "\", \"wrap\": true}" (i < count - 1 ? "," : "")
+                }
+              }
+              print "]"
+            }
+          ' poem.txt > poem_blocks.json
+
       - name: Post poem to Teams channels
         env:
           TEAMS_WEBHOOK_RANDOM: ${{ secrets.TEAMS_WEBHOOK_RANDOM }}
           # Add more as needed:
           # TEAMS_WEBHOOK_SOMETHING_ELSE: ${{ secrets.TEAMS_WEBHOOK_SOMETHING_ELSE }}
         run: |
-          # Convert each line of the poem into a separate TextBlock
-          POEM_BODY=$(awk 'BEGIN { print "[" }
-            NF { gsub(/"/, "\\\""); print "{\"type\": \"TextBlock\", \"text\": \"" $0 "\", \"wrap\": true}," }
-            !NF { print "{\"type\": \"TextBlock\", \"text\": \"\", \"wrap\": true}," }
-            END { print "]" }' poem.txt)
-
           for VAR in $(env | grep '^TEAMS_WEBHOOK_' | cut -d= -f1); do
             WEBHOOK_URL="${!VAR}"
             echo "🔗 Posting to $VAR..."
 
-            JSON_PAYLOAD=$(jq -n --argjson body "$POEM_BODY" '
+            JSON_PAYLOAD=$(jq -n --argfile body poem_blocks.json '
               {
                 attachments: [
                   {
