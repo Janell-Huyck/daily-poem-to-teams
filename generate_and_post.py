@@ -1,8 +1,8 @@
 import os
-import openai
+from openai import OpenAI
 import requests
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
 def generate_poem():
     prompt = (
@@ -11,15 +11,17 @@ def generate_poem():
         "(nature, light, breath, etc.) to explore themes like connection, hope, or quiet strength. "
         "Avoid current events or modern imagery. The poem should feel like a pause — a moment to breathe."
     )
-    response = openai.ChatCompletion.create(
+    
+    response = client.chat.completions.create(
         model='gpt-4',
         messages=[
             {'role': 'system', 'content': 'You are a thoughtful poet.'},
             {'role': 'user', 'content': prompt}
         ],
+        temperature=0.8,
         max_tokens=200,
-        temperature=0.8
     )
+
     return response.choices[0].message.content.strip()
 
 def post_to_all_teams_channels(poem_text):
