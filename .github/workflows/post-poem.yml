@@ -2,13 +2,12 @@ name: Daily Poem to Teams
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # 7 or 8 AM EST depending on DST
+    - cron: '0 12 * * *'  # Daily at 8AM UTC (7/8 AM EST depending on DST)
   workflow_dispatch:
 
 jobs:
   post-daily-poem:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,22 +20,39 @@ jobs:
       - name: Install dependencies
         run: pip install openai
 
-      - name: Generate poem and save to file
+      - name: Try to generate poem (1st attempt)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python generate_and_post.py
-
-      - name: Post poem to all Teams webhooks
-        env:
-          TEAMS_WEBHOOK_RANDOM: ${{ secrets.TEAMS_WEBHOOK_RANDOM }}
-          # TEAMS_WEBHOOK_SOMETHING_ELSE: ${{ secrets.TEAMS_WEBHOOK_SOMETHING_ELSE }}
         run: |
-          POEM=$(cat poem.txt | jq -sR .)
-      
+          python generate_poem.py || { echo "❌ Poem generation failed. Will retry later."; exit 99; }
+
+      - name: Retry after 30 minutes if poem failed
+        if: ${{ failure() }}
+        timeout-minutes: 31
+        run: |
+          echo "⏳ Waiting 30 minutes before retry..."
+          sleep 1800
+          python generate_poem.py || exit 1  # fail hard if still bad
+
+      - name: Fail if poem file is still missing
+        run: |
+          if [ ! -s poem.txt ]; then
+            echo "❌ Poem file is missing or empty after retry. Aborting post."
+            exit 1
+          fi
+
+      - name: Post poem to Teams channels
+        env:
+          # To add another channel posting, add: TEAMS_WEBHOOK_CHANNEL_NAME: ${{ secrets.TEAMS_WEBHOOK_CHANNEL_NAME }}
+          TEAMS_WEBHOOK_RANDOM: ${{ secrets.TEAMS_WEBHOOK_RANDOM }}
+        run: |
+          # Convert newlines + blank lines to <br><br> formatting for Teams
+          POEM=$(awk 'NF{print $0 "<br>"} !NF{print "<br>"}' poem.txt | jq -Rs .)
+
           for VAR in $(env | grep '^TEAMS_WEBHOOK_' | cut -d= -f1); do
-            WEBHOOK_URL=${!VAR}
+            WEBHOOK_URL="${!VAR}"
             echo "🔗 Posting to $VAR..."
-      
+
             JSON_PAYLOAD=$(jq -n --arg poem "$POEM" '
               {
                 attachments: [
@@ -65,8 +81,7 @@ jobs:
                   }
                 ]
               }')
-      
+
             curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD" "$WEBHOOK_URL"
             echo " ✅ Posted to $VAR"
           done
-        
