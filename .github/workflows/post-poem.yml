@@ -1,0 +1,28 @@
+name: Daily Poem to Teams
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # Runs daily at 7 or 8 AM EST (depending on DST)
+  workflow_dispatch:     # Allows manual run
+
+jobs:
+  post-daily-poem:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install openai requests
+
+      - name: Run poem script
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+        run: python generate_and_post.py
