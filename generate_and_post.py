@@ -22,6 +22,10 @@ def generate_poem():
         max_tokens=200,
     )
 
+    print("\n=== Poem Generated ===\n")
+    print(response.choices[0].message.content.strip())
+    print("\n======================\n")
+
     return response.choices[0].message.content.strip()
 
 def post_to_all_teams_channels(poem_text):
@@ -31,10 +35,12 @@ def post_to_all_teams_channels(poem_text):
 
     for key, value in os.environ.items():
         if key.startswith('TEAMS_WEBHOOK_') and value.startswith('https://'):
-            print(f"Posting to {key}...")
+            print(f"🔗 Attempting to post to {key}...")
             response = requests.post(value, json=payload)
+            print(f"📬 Status: {response.status_code}")
+            print(f"📨 Response: {response.text}")
             if response.status_code != 200:
-                print(f"❌ Failed to post to {key}: {response.text}")
+                print(f"❌ Failed to post to {key}")
             else:
                 print(f"✅ Successfully posted to {key}")
 
