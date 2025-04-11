@@ -80,7 +80,7 @@ jobs:
             WEBHOOK_URL="${!VAR}"
             echo "🔗 Posting to $VAR..."
 
-            JSON_PAYLOAD=$(jq -n --argfile body poem_blocks.json '
+            JSON_PAYLOAD=$(jq -n --slurpfile body poem_blocks.json '
               {
                 attachments: [
                   {
@@ -98,7 +98,7 @@ jobs:
                             "text": "📜 Daily Poem",
                             "horizontalAlignment": "Center"
                           }
-                        ] + $body
+                        ] + $body[0]
                       )
                     }
                   }
