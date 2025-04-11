@@ -1,6 +1,4 @@
 import os
-import json
-import requests
 from openai import OpenAI
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
@@ -24,47 +22,13 @@ def generate_poem():
     )
 
     poem = response.choices[0].message.content.strip()
-
     print("\n=== Poem Generated ===\n")
     print(poem)
     print("\n======================\n")
 
-    return poem
-
-def post_to_all_teams_channels(poem_text):
-    payload = {
-        '@type': 'MessageCard',
-        '@context': 'https://schema.org/extensions',
-        'summary': 'Daily Poem',
-        'themeColor': '0078D7',
-        'title': '📜 Daily Poem',
-        'text': poem_text
-    }
-
-    webhook_keys = [k for k in os.environ if k.startswith('TEAMS_WEBHOOK_')]
-    print(f"🔗 Found {len(webhook_keys)} Teams webhooks in environment variables.")
-    print(f"These are the keys: {webhook_keys}")
-
-    for key in webhook_keys:
-        url = os.environ.get(key)
-        if url and url.startswith('https://'):
-            print(f"🔗 Attempting to post to {key}...")
-
-            headers = {'Content-Type': 'application/json'}
-            response = requests.post(
-                url,
-                data=json.dumps(payload),  # raw payload like curl
-                headers=headers
-            )
-
-            print(f"📬 Status: {response.status_code}")
-            print(f"📨 Response: {response.text}")
-
-            if response.status_code not in (200, 202):
-                print(f"❌ Failed to post to {key}")
-            else:
-                print(f"✅ Successfully posted to {key} (status: {response.status_code})")
+    # Write poem to file
+    with open('poem.txt', 'w') as f:
+        f.write(poem)
 
 if __name__ == '__main__':
-    poem = generate_poem()
-    post_to_all_teams_channels(poem)
+    generate_poem()

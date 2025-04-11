@@ -2,8 +2,8 @@ name: Daily Poem to Teams
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # Runs daily at 7 or 8 AM EST (depending on DST)
-  workflow_dispatch:     # Allows manual run
+    - cron: '0 12 * * *'  # 7 or 8 AM EST depending on DST
+  workflow_dispatch:
 
 jobs:
   post-daily-poem:
@@ -19,10 +19,54 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install openai requests
+        run: pip install openai
 
-      - name: Run poem script
+      - name: Generate poem and save to file
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          TEAMS_WEBHOOK_RANDOM: ${{ secrets.TEAMS_WEBHOOK_RANDOM }} # For the "Random" channel in UCLIBS DEV.
         run: python generate_and_post.py
+
+      - name: Post poem to all Teams webhooks
+        env:
+          TEAMS_WEBHOOK_RANDOM: ${{ secrets.TEAMS_WEBHOOK_RANDOM }}
+          # TEAMS_WEBHOOK_SOMETHING_ELSE: ${{ secrets.TEAMS_WEBHOOK_SOMETHING_ELSE }}
+        run: |
+          POEM=$(cat poem.txt | jq -sR .)
+      
+          for VAR in $(env | grep '^TEAMS_WEBHOOK_' | cut -d= -f1); do
+            WEBHOOK_URL=${!VAR}
+            echo "🔗 Posting to $VAR..."
+      
+            JSON_PAYLOAD=$(jq -n --arg poem $POEM '
+              {
+                attachments: [
+                  {
+                    contentType: "application/vnd.microsoft.card.adaptive",
+                    content: {
+                      "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+                      type: "AdaptiveCard",
+                      version: "1.0",
+                      body: [
+                        {
+                          type: "TextBlock",
+                          size: "Large",
+                          weight: "Bolder",
+                          text: "📜 Daily Poem",
+                          horizontalAlignment: "Center"
+                        },
+                        {
+                          type: "TextBlock",
+                          text: $poem,
+                          wrap: true,
+                          separator: true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }')
+      
+            curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD" "$WEBHOOK_URL"
+            echo " ✅ Posted to $VAR"
+          done
+        
