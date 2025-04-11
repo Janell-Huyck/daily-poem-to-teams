@@ -47,7 +47,7 @@ jobs:
           TEAMS_WEBHOOK_RANDOM: ${{ secrets.TEAMS_WEBHOOK_RANDOM }}
         run: |
           # Convert newlines + blank lines to <br><br> formatting for Teams
-          POEM=$(awk 'NF{print $0 "<br>"} !NF{print "<br>"}' poem.txt | jq -Rs .)
+          POEM=$(sed 's/$/<br>/' poem.txt | paste -sd '' - | jq -Rs .)
 
           for VAR in $(env | grep '^TEAMS_WEBHOOK_' | cut -d= -f1); do
             WEBHOOK_URL="${!VAR}"
