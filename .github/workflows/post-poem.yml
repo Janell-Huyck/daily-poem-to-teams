@@ -48,9 +48,10 @@ jobs:
           # TEAMS_WEBHOOK_SOMETHING_ELSE: ${{ secrets.TEAMS_WEBHOOK_SOMETHING_ELSE }}
         run: |
           # Convert each line of the poem into a separate TextBlock
-          POEM_BODY=$(awk 'BEGIN { print "[" } 
-            { gsub(/"/, "\\\""); print "{\"type\": \"TextBlock\", \"text\": \"" $0 "\", \"wrap\": true}," } 
-            END { print "{\"type\": \"TextBlock\", \"text\": \"\", \"wrap\": true} ]" }' poem.txt)
+          POEM_BODY=$(awk 'BEGIN { print "[" }
+            NF { gsub(/"/, "\\\""); print "{\"type\": \"TextBlock\", \"text\": \"" $0 "\", \"wrap\": true}," }
+            !NF { print "{\"type\": \"TextBlock\", \"text\": \"\", \"wrap\": true}," }
+            END { print "]" }' poem.txt)
 
           for VAR in $(env | grep '^TEAMS_WEBHOOK_' | cut -d= -f1); do
             WEBHOOK_URL="${!VAR}"
