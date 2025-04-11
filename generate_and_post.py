@@ -30,7 +30,12 @@ def generate_poem():
 
 def post_to_all_teams_channels(poem_text):
     payload = {
-        'text': f"📜 *Daily Poem*\n\n{poem_text}"
+        '@type': 'MessageCard',
+        '@context': 'https://schema.org/extensions',
+        'summary': 'Daily Poem',
+        'themeColor': '0078D7',
+        'title': '📜 Daily Poem',
+        'text': poem_text
     }
 
     webhook_keys = [k for k in os.environ if k.startswith('TEAMS_WEBHOOK_')]
@@ -44,7 +49,7 @@ def post_to_all_teams_channels(poem_text):
             response = requests.post(value, json=payload)
             print(f"📬 Status: {response.status_code}")
             print(f"📨 Response: {response.text}")
-            if response.status_code != 200:
+            if response.status_code not in (200, 202):
                 print(f"❌ Failed to post to {key}")
             else:
                 print(f"✅ Successfully posted to {key}")
