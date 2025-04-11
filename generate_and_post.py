@@ -33,8 +33,13 @@ def post_to_all_teams_channels(poem_text):
         'text': f"📜 *Daily Poem*\n\n{poem_text}"
     }
 
-    for key, value in os.environ.items():
-        if key.startswith('TEAMS_WEBHOOK_') and value.startswith('https://'):
+    webhook_keys = [k for k in os.environ if k.startswith('TEAMS_WEBHOOK_')]
+    print(f"🔗 Found {len(webhook_keys)} Teams webhooks in environment variables.")
+    print(f"These are the keys: {webhook_keys}")
+
+    for key in webhook_keys:
+        value = os.environ.get(key)
+        if value and value.startswith('https://'):
             print(f"🔗 Attempting to post to {key}...")
             response = requests.post(value, json=payload)
             print(f"📬 Status: {response.status_code}")
@@ -43,6 +48,7 @@ def post_to_all_teams_channels(poem_text):
                 print(f"❌ Failed to post to {key}")
             else:
                 print(f"✅ Successfully posted to {key}")
+
 
 if __name__ == '__main__':
     poem = generate_poem()
