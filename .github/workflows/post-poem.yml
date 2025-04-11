@@ -37,7 +37,7 @@ jobs:
             WEBHOOK_URL=${!VAR}
             echo "🔗 Posting to $VAR..."
       
-            JSON_PAYLOAD=$(jq -n --arg poem $POEM '
+            JSON_PAYLOAD=$(jq -n --arg poem "$POEM" '
               {
                 attachments: [
                   {
