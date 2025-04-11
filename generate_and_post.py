@@ -1,17 +1,18 @@
 import os
-from openai import OpenAI
+import json
 import requests
+from openai import OpenAI
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
 def generate_poem():
     prompt = (
-        "Write a short, reflective free-verse poem for employees of a university. "
+        "Write a short, reflective free-verse poem (about 8–12 lines) for employees of a university. "
         "The tone should be steady, gentle, and human. Use timeless metaphors "
         "(nature, light, breath, etc.) to explore themes like connection, hope, or quiet strength. "
         "Avoid current events or modern imagery. The poem should feel like a pause — a moment to breathe."
     )
-    
+
     response = client.chat.completions.create(
         model='gpt-4o',
         messages=[
@@ -22,11 +23,13 @@ def generate_poem():
         max_tokens=200,
     )
 
+    poem = response.choices[0].message.content.strip()
+
     print("\n=== Poem Generated ===\n")
-    print(response.choices[0].message.content.strip())
+    print(poem)
     print("\n======================\n")
 
-    return response.choices[0].message.content.strip()
+    return poem
 
 def post_to_all_teams_channels(poem_text):
     payload = {
@@ -43,17 +46,24 @@ def post_to_all_teams_channels(poem_text):
     print(f"These are the keys: {webhook_keys}")
 
     for key in webhook_keys:
-        value = os.environ.get(key)
-        if value and value.startswith('https://'):
+        url = os.environ.get(key)
+        if url and url.startswith('https://'):
             print(f"🔗 Attempting to post to {key}...")
-            response = requests.post(value, json=payload)
+
+            headers = {'Content-Type': 'application/json'}
+            response = requests.post(
+                url,
+                data=json.dumps(payload),  # raw payload like curl
+                headers=headers
+            )
+
             print(f"📬 Status: {response.status_code}")
             print(f"📨 Response: {response.text}")
+
             if response.status_code not in (200, 202):
                 print(f"❌ Failed to post to {key}")
             else:
-                print(f"✅ Successfully posted to {key}")
-
+                print(f"✅ Successfully posted to {key} (status: {response.status_code})")
 
 if __name__ == '__main__':
     poem = generate_poem()
