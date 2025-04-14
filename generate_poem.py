@@ -28,7 +28,7 @@ opening = random.choice(opening_styles)
 theme = random.choice(themes)
 
 prompt = (
-    f"Write a short, reflective free-verse poem (8–12 lines) for employees of a university. "
+    f"Write a short, reflective free-verse poem (6–8 lines) for employees of a university. "
     f"{opening} The poem should explore the theme of {theme}. "
     "Use stanza spacing (blank lines) where appropriate. "
     "Avoid beginning with common phrases like 'In the...' or 'There is...'. "
