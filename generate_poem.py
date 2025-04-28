@@ -42,6 +42,7 @@ prompt = (
     "Avoid clichés, common sayings, and modern references. "
     "Do not use dashes, ellipses, or ending punctuation at the end of lines unless absolutely necessary. "
     "Let line breaks create the natural pauses. "
+    "Do not capitalize the beginning of each line unless grammatically necessary (e.g., proper nouns). "
     "The haiku should feel like a moment of quiet recognition."
 )
 
