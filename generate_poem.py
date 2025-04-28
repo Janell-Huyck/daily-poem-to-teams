@@ -28,21 +28,16 @@ opening = random.choice(opening_styles)
 theme = random.choice(themes)
 
 prompt = (
-    f"Write a short, reflective free-verse poem (6–8 lines) for employees of a university. "
-    f"{opening} The poem should explore the theme of {theme}. "
-    "Use stanza spacing (blank lines) where appropriate. "
-    "Avoid beginning with common phrases like 'In the...' or 'There is...'. "
-    "The tone should be steady, gentle, and human. Use timeless metaphors "
-    "(nature, breath, light, etc.). Avoid current events or modern imagery. "
-    "The poem should feel like a pause — a moment to breathe."
+    f"Write a haiku poem (5 syllables / 7 syllables / 5 syllables) for employees of a university. "
+    f"{opening} The haiku should explore the theme of {theme}. "
+    "Use timeless imagery (nature, light, breath, seasons). "
+    "The tone should be gentle, human, and reflective. "
+    "Avoid clichés, common sayings, and modern references. "
+    "The haiku should feel like a moment of quiet recognition."
 )
 
 # --- Generate poem ---
 def generate_poem():
-    print("\n--- Prompt Sent to OpenAI ---\n")
-    print(prompt)
-    print("\n-----------------------------\n")
-
     try:
         response = client.chat.completions.create(
             model='gpt-4o',
@@ -51,7 +46,7 @@ def generate_poem():
                 {'role': 'user', 'content': prompt}
             ],
             temperature=0.85,
-            max_tokens=200,
+            max_tokens=75,
         )
     except Exception as e:
         print(f"❌ Error while generating poem: {e}")
@@ -64,9 +59,6 @@ def generate_poem():
 if __name__ == '__main__':
     poem = generate_poem()
     if poem:
-        print("\n=== Poem Generated ===\n")
-        print(poem)
-        print("\n======================\n")
         with open('poem.txt', 'w', encoding='utf-8') as f:
             f.write(poem)
     else:
