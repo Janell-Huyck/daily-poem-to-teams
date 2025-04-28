@@ -1,4 +1,4 @@
-name: Daily Poem to Teams
+name: Daily Haiku to Teams and SMS
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  post-daily-poem:
+  post-daily-haiku:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,13 +20,13 @@ jobs:
       - name: Install dependencies
         run: pip install openai
 
-      - name: Try to generate poem (1st attempt)
+      - name: Try to generate haiku (first attempt)
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          python generate_poem.py || { echo "❌ Poem generation failed. Will retry later."; exit 99; }
+          python generate_poem.py || { echo "❌ Haiku generation failed. Will retry later."; exit 99; }
 
-      - name: Retry after 30 minutes if poem failed
+      - name: Retry after 30 minutes if haiku failed
         if: ${{ failure() }}
         timeout-minutes: 31
         run: |
@@ -34,10 +34,10 @@ jobs:
           sleep 1800
           python generate_poem.py || exit 1
 
-      - name: Fail if poem file is still missing
+      - name: Fail if haiku file is still missing
         run: |
           if [ ! -s poem.txt ]; then
-            echo "❌ Poem file is missing or empty after retry. Aborting post."
+            echo "❌ Haiku file is missing or empty after retry. Aborting post."
             exit 1
           fi
 
@@ -50,7 +50,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y jq
           fi
 
-      - name: Convert poem to JSON for Teams
+      - name: Convert haiku to JSON for Teams
         run: |
           awk '
             BEGIN {
@@ -72,7 +72,7 @@ jobs:
             }
           ' poem.txt > poem_blocks.json
 
-      - name: Post poem to Teams channels
+      - name: Post haiku to Teams channels
         env:
           TEAMS_WEBHOOK_RANDOM: ${{ secrets.TEAMS_WEBHOOK_RANDOM }}
           # Add more as needed:
@@ -108,5 +108,46 @@ jobs:
               }')
 
             curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -d "$JSON_PAYLOAD" "$WEBHOOK_URL"
-            echo " ✅ Posted to $VAR"
+            echo "✅ Posted to $VAR"
           done
+
+      - name: Validate and clean SMS recipient list
+        id: validate_sms
+        run: |
+          echo "🔎 Checking SMS recipient list..."
+          if [ -z "${{ vars.SMS_RECIPIENTS }}" ]; then
+            echo "❌ SMS_RECIPIENTS is empty. Aborting."
+            exit 1
+          fi
+
+          # Remove spaces after commas automatically
+          CLEANED=$(echo "${{ vars.SMS_RECIPIENTS }}" | sed 's/, */,/g')
+
+          # Basic validation: check that every entry contains "@"
+          IFS=',' read -ra ADDRS <<< "$CLEANED"
+          for addr in "${ADDRS[@]}"; do
+            if [[ "$addr" != *@* ]]; then
+              echo "❌ Invalid address format: $addr"
+              exit 1
+            fi
+          done
+
+          echo "✅ SMS recipients look valid."
+
+          # Save cleaned list for the next step
+          echo "recipients=$CLEANED" >> $GITHUB_OUTPUT
+
+      - name: Send Daily Haiku SMS via Outlook
+        if: ${{ success() }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.office365.com
+          server_port: 587
+          username: ${{ secrets.OUTLOOK_USERNAME }}
+          password: ${{ secrets.OUTLOOK_APP_PASSWORD }}
+          subject: "[Daily Haiku]"
+          body: |
+            $(cat poem.txt)
+          to: ${{ steps.validate_sms.outputs.recipients }}
+          from: "haikubot@outlook.com"
+          secure: true
