@@ -150,4 +150,4 @@ jobs:
             $(cat poem.txt)
           to: ${{ steps.validate_sms.outputs.recipients }}
           from: "haikubot@outlook.com"
-          secure: true
+          secure: false
