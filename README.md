@@ -57,6 +57,7 @@ Example:
 | Carrier | SMS Gateway Address Format |
 |:--------|:----------------------------|
 | Verizon | `{number}@vtext.com` |
+| Spectrum | `{number}@vtext.com` |
 | AT&T | `{number}@txt.att.net` |
 | T-Mobile | `{number}@tmomail.net` |
 | Sprint | `{number}@messaging.sprintpcs.com` |
