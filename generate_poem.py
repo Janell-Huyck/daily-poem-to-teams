@@ -1,3 +1,5 @@
+# generate_poem.py
+
 import os
 import sys
 import random
@@ -11,6 +13,11 @@ def load_lines(filename):
     except FileNotFoundError:
         print(f"❌ File not found: {filename}")
         sys.exit(1)
+
+def clean_poem(poem):
+    """Remove unwanted trailing dashes, ellipses, and extra whitespace from each line."""
+    lines = [line.rstrip('—. ').rstrip() for line in poem.splitlines()]
+    return '\n'.join(lines)
 
 # --- Setup ---
 api_key = os.environ.get('OPENAI_API_KEY')
@@ -33,11 +40,17 @@ prompt = (
     "Use timeless imagery (nature, light, breath, seasons). "
     "The tone should be gentle, human, and reflective. "
     "Avoid clichés, common sayings, and modern references. "
+    "Do not use dashes, ellipses, or ending punctuation at the end of lines unless absolutely necessary. "
+    "Let line breaks create the natural pauses. "
     "The haiku should feel like a moment of quiet recognition."
 )
 
 # --- Generate poem ---
 def generate_poem():
+    print("\n--- Prompt Sent to OpenAI ---\n")
+    print(prompt)
+    print("\n-----------------------------\n")
+
     try:
         response = client.chat.completions.create(
             model='gpt-4o',
@@ -45,8 +58,8 @@ def generate_poem():
                 {'role': 'system', 'content': 'You are a thoughtful poet.'},
                 {'role': 'user', 'content': prompt}
             ],
-            temperature=0.85,
-            max_tokens=75,
+            temperature=0.9,
+            max_tokens=100,
         )
     except Exception as e:
         print(f"❌ Error while generating poem: {e}")
@@ -59,6 +72,10 @@ def generate_poem():
 if __name__ == '__main__':
     poem = generate_poem()
     if poem:
+        poem = clean_poem(poem)  # Apply the cleanup here
+        print("\n=== Cleaned Poem Generated ===\n")
+        print(poem)
+        print("\n===============================\n")
         with open('poem.txt', 'w', encoding='utf-8') as f:
             f.write(poem)
     else:
