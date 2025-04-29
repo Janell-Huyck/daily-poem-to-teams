@@ -27,24 +27,24 @@ if not api_key:
 
 client = OpenAI(api_key=api_key)
 
-# --- Load randomized content ---
+# Load randomized content
 opening_styles = load_lines('opening_styles.txt')
-themes = load_lines('poem_themes.txt')
-
 opening = random.choice(opening_styles)
-theme = random.choice(themes)
 
+# New Prompt
 prompt = (
-    f"Write a haiku poem (5 syllables / 7 syllables / 5 syllables) for employees of a university. "
-    f"{opening} The haiku should explore the theme of {theme}. "
-    "Use timeless imagery (nature, light, breath, seasons). "
-    "The tone should be gentle, human, and reflective. "
-    "Avoid clichés, common sayings, and modern references. "
-    "Do not use dashes, ellipses, or ending punctuation at the end of lines unless absolutely necessary. "
-    "Let line breaks create the natural pauses. "
-    "Do not capitalize the beginning of each line unless grammatically necessary (e.g., proper nouns). "
-    "The haiku should feel like a moment of quiet recognition."
+    f"{opening} "
+    "Write a short haiku (3 lines, following the 5-7-5 syllable pattern). "
+    "The haiku should capture a fleeting moment of awareness — a glimpse that suggests something deeper without explaining it. "
+    "Focus on a small, sensory detail: a sound, a breath, a shadow, a flicker of light. "
+    "Avoid simply describing a scene. Instead, hint at a larger feeling or shift in perception. "
+    "Leave room for the reader to wonder — do not conclude or explain. "
+    "The tone should be still, subtle, and contemplative, like the pause at the end of a tai chi movement. "
+    "Avoid beginning with common phrases like 'There is...' or 'I see...'. "
+    "Use simple language grounded in physical senses. "
+    "Let the haiku *be* the experience itself."
 )
+
 
 # --- Generate poem ---
 def generate_poem():
@@ -59,7 +59,7 @@ def generate_poem():
                 {'role': 'system', 'content': 'You are a thoughtful poet.'},
                 {'role': 'user', 'content': prompt}
             ],
-            temperature=0.9,
+            temperature=0.7,
             max_tokens=100,
         )
     except Exception as e:
