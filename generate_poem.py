@@ -31,7 +31,6 @@ client = OpenAI(api_key=api_key)
 opening_styles = load_lines('opening_styles.txt')
 opening = random.choice(opening_styles)
 
-# New Prompt
 prompt = (
     f"{opening} "
     "Write a short haiku (3 lines, following the 5-7-5 syllable pattern). "
@@ -42,9 +41,14 @@ prompt = (
     "The tone should be still, subtle, and contemplative, like the pause at the end of a tai chi movement. "
     "Avoid beginning with common phrases like 'There is...' or 'I see...'. "
     "Use simple language grounded in physical senses. "
-    "Let the haiku *be* the experience itself."
+    "Let the haiku *be* the experience itself. "
+    "Avoid unnecessary capitalization — begin with lowercase unless grammar requires otherwise. "
+    "Avoid using the word 'haiku' in the poem. "
+    "Write the poem in English only. "
+    "Do not include any additional explanation or introductory text. "
+    "The poem must be exactly 3 lines — no more, no less. "
+    "Do not include extra line breaks, blank lines, or punctuation at the end of any line."
 )
-
 
 # --- Generate poem ---
 def generate_poem():
