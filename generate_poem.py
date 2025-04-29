@@ -42,12 +42,13 @@ prompt = (
     "Avoid beginning with common phrases like 'There is...' or 'I see...'. "
     "Use simple language grounded in physical senses. "
     "Let the haiku *be* the experience itself. "
+    "Avoid overused images such as falling leaves, trees in autumn, or single drifting leaves. Let the image feel unexpected, as if newly noticed. "
     "Avoid unnecessary capitalization — begin with lowercase unless grammar requires otherwise. "
     "Avoid using the word 'haiku' in the poem. "
     "Write the poem in English only. "
     "Do not include any additional explanation or introductory text. "
     "The poem must be exactly 3 lines — no more, no less. "
-    "Do not include extra line breaks, blank lines, or punctuation at the end of any line."
+    "Avoid extra line breaks or blank lines. Do not end any line with punctuation."
 )
 
 # --- Generate poem ---
