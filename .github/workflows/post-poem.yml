@@ -97,7 +97,7 @@ jobs:
                             "type": "TextBlock",
                             "size": "Large",
                             "weight": "Bolder",
-                            "text": "📜 Daily Haiku",
+                            "text": "📜",
                             "horizontalAlignment": "Center"
                           }
                         ] + $body[0]
